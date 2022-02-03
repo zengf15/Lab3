@@ -1,7 +1,7 @@
 ---
 title: "Lab 03 - Nobel laureates"
-author: "Insert your name here"
-date: "Insert date here"
+author: "Fanyi Zeng"
+date: "01/30/22"
 output: github_document
 ---
 
@@ -19,33 +19,88 @@ nobel <- read_csv("data/nobel.csv")
 
 ### Exercise 1
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
+935 observations (rows) of 26 variables (columns)
+
+```{r view}
+view(nobel)
+```
 
 ### Exercise 2
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
+filter out recipients who have no country data, who are organizations, and who have passed away.
+
+```{r filter}
+nobel_living <- nobel %>%
+  filter(!is.na(country),
+         gender != "org",
+         is.na(died_date))
+view(nobel_living)
+```
 
 ### Exercise 3
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
+sort country where the recipients live at the time of receiving the prize to US vs. other
+
+```{r us-based}
+nobel_living <- nobel_living %>%
+  mutate(country_us = if_else(country == "USA", "USA", "Other"))
+```
+
+filter out non-science prizes
+
+```{r science}
+nobel_living_science <- nobel_living %>%
+  filter(category %in% c("Physics", "Medicine", "Chemistry", "Economics"))
+```
+
+create a faceted bar plot visualizing the relationship between the category of prize and whether the laureate was in the US when they won the nobel prize
+
+```{r prize-and-us-based}
+ggplot(data = nobel_living_science, aes(y = country_us)) +
+  geom_bar() +
+  facet_wrap(~category)
+
+```
+
+True, even by each prize category, most living laureates are from the US.
 
 ### Exercise 4
 
-...
+sort ppl into us-born vs. other
+105 rows of us-based laureates
+
+```{r us-born}
+nobel_living_science <- nobel_living_science %>%
+  mutate(born_us = if_else(born_country == "USA", "USA", "Other") )
+nobel_living_science %>%
+  filter(born_us == "USA")
+```
 
 ### Exercise 5
 
-...
+add a second variable to your visualization from Exercise 3 based on whether the laureate was born in the US or not
+
+```{r prize-and-us-born}
+ggplot(data = nobel_living_science, aes(y = country_us, fill = born_us)) +
+  geom_bar() +
+  facet_wrap(~category) +
+  labs(
+    x = "Count",
+    y = "Country of Residence",
+    fill = "Country of Origin",
+    title = "Residing Country of Living Laureates",
+    subtitle = "By Country of Origin"
+  )
+```
+
+Not true. Most USA-based laureates are born in  the USA.
 
 ### Exercise 6
 
-...
+The most common country of origin for US-based living laureates who are not born in the U.S. is the U.K.
+
+```{r birth-country}
+nobel_living_science %>%
+  filter(country_us == "USA", born_us == "Other") %>%
+  count(born_country) %>%
+  arrange(desc(born_country))
