@@ -104,3 +104,4 @@ nobel_living_science %>%
   filter(country_us == "USA", born_us == "Other") %>%
   count(born_country) %>%
   arrange(desc(born_country))
+```
